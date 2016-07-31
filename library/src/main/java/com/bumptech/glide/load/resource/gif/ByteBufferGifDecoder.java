@@ -3,23 +3,23 @@ package com.bumptech.glide.load.resource.gif;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.util.Log;
-
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.gifdecoder.GifDecoder;
 import com.bumptech.glide.gifdecoder.GifHeader;
 import com.bumptech.glide.gifdecoder.GifHeaderParser;
+import com.bumptech.glide.gifdecoder.StandardGifDecoder;
 import com.bumptech.glide.load.Option;
 import com.bumptech.glide.load.Options;
 import com.bumptech.glide.load.ResourceDecoder;
 import com.bumptech.glide.load.Transformation;
+import com.bumptech.glide.load.engine.bitmap_recycle.ArrayPool;
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
-import com.bumptech.glide.load.engine.bitmap_recycle.ByteArrayPool;
+import com.bumptech.glide.load.engine.bitmap_recycle.LruArrayPool;
 import com.bumptech.glide.load.resource.UnitTransformation;
 import com.bumptech.glide.load.resource.bitmap.ImageHeaderParser;
 import com.bumptech.glide.load.resource.bitmap.ImageHeaderParser.ImageType;
 import com.bumptech.glide.util.LogTime;
 import com.bumptech.glide.util.Util;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Queue;
@@ -45,31 +45,35 @@ public class ByteBufferGifDecoder implements ResourceDecoder<ByteBuffer, GifDraw
   private final Context context;
   private final GifHeaderParserPool parserPool;
   private final BitmapPool bitmapPool;
-  private final ByteArrayPool byteArrayPool;
   private final GifDecoderFactory gifDecoderFactory;
   private final GifBitmapProvider provider;
 
   public ByteBufferGifDecoder(Context context) {
-    this(context, Glide.get(context).getBitmapPool(), Glide.get(context).getByteArrayPool());
+    this(context, Glide.get(context).getBitmapPool(), Glide.get(context).getArrayPool());
   }
 
-  public ByteBufferGifDecoder(Context context, BitmapPool bitmapPool, ByteArrayPool byteArrayPool) {
-    this(context, bitmapPool, byteArrayPool, PARSER_POOL, GIF_DECODER_FACTORY);
+  public ByteBufferGifDecoder(
+      Context context, BitmapPool bitmapPool, ArrayPool arrayPool) {
+    this(context, bitmapPool, arrayPool, PARSER_POOL, GIF_DECODER_FACTORY);
   }
 
   // Visible for testing.
-  ByteBufferGifDecoder(Context context, BitmapPool bitmapPool, ByteArrayPool byteArrayPool,
-      GifHeaderParserPool parserPool, GifDecoderFactory gifDecoderFactory) {
-    this.context = context;
+  ByteBufferGifDecoder(
+      Context context,
+      BitmapPool bitmapPool,
+      ArrayPool arrayPool,
+      GifHeaderParserPool parserPool,
+      GifDecoderFactory gifDecoderFactory) {
+    this.context = context.getApplicationContext();
     this.bitmapPool = bitmapPool;
-    this.byteArrayPool = byteArrayPool;
     this.gifDecoderFactory = gifDecoderFactory;
-    this.provider = new GifBitmapProvider(bitmapPool, byteArrayPool);
+    this.provider = new GifBitmapProvider(bitmapPool, arrayPool);
     this.parserPool = parserPool;
   }
 
   @Override
   public boolean handles(ByteBuffer source, Options options) throws IOException {
+    ArrayPool byteArrayPool = new LruArrayPool();
     return !options.get(DISABLE_ANIMATION)
         && new ImageHeaderParser(source, byteArrayPool).getType() == ImageType.GIF;
   }
@@ -109,7 +113,7 @@ public class ByteBufferGifDecoder implements ResourceDecoder<ByteBuffer, GifDraw
             firstFrame);
 
     if (Log.isLoggable(TAG, Log.VERBOSE)) {
-      Log.v(TAG, "Decoded gif from stream in " + LogTime.getElapsedMillis(startTime));
+      Log.v(TAG, "Decoded GIF from stream in " + LogTime.getElapsedMillis(startTime));
     }
 
     return new GifDrawableResource(gifDrawable);
@@ -123,7 +127,7 @@ public class ByteBufferGifDecoder implements ResourceDecoder<ByteBuffer, GifDraw
     // than 0.
     int sampleSize = Math.max(1, powerOfTwoSampleSize);
     if (Log.isLoggable(TAG, Log.VERBOSE)) {
-      Log.v(TAG, "Downsampling gif"
+      Log.v(TAG, "Downsampling GIF"
           + ", sampleSize: " + sampleSize
           + ", target dimens: [" + targetWidth + "x" + targetHeight + "]"
           + ", actual dimens: [" + gifHeader.getWidth() + "x" + gifHeader.getHeight() + "]");
@@ -135,7 +139,7 @@ public class ByteBufferGifDecoder implements ResourceDecoder<ByteBuffer, GifDraw
   static class GifDecoderFactory {
     public GifDecoder build(GifDecoder.BitmapProvider provider, GifHeader header,
         ByteBuffer data, int sampleSize) {
-      return new GifDecoder(provider, header, data, sampleSize);
+      return new StandardGifDecoder(provider, header, data, sampleSize);
     }
   }
 

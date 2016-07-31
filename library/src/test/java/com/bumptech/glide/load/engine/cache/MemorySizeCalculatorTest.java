@@ -4,14 +4,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.google.common.collect.Range;
-
 import android.app.ActivityManager;
 import android.content.Context;
 import android.os.Build;
-
 import com.bumptech.glide.tests.Util;
-
+import com.google.common.collect.Range;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -141,7 +138,7 @@ public class MemorySizeCalculatorTest {
 
     Util.setSdkVersionInt(10);
 
-    int byteArrayPoolSize = harness.getCalculator().getByteArrayPoolSize();
+    int byteArrayPoolSize = harness.getCalculator().getArrayPoolSizeInBytes();
     assertThat(byteArrayPoolSize).isEqualTo(harness.byteArrayPoolSizeBytes / 2);
   }
 
@@ -161,7 +158,7 @@ public class MemorySizeCalculatorTest {
     float memoryCacheScreens = MemorySizeCalculator.Builder.MEMORY_CACHE_TARGET_SCREENS;
     float bitmapPoolScreens = MemorySizeCalculator.Builder.BITMAP_POOL_TARGET_SCREENS;
     float sizeMultiplier = MemorySizeCalculator.Builder.MAX_SIZE_MULTIPLIER;
-    int byteArrayPoolSizeBytes = MemorySizeCalculator.Builder.BYTE_ARRAY_POOL_SIZE_BYTES;
+    int byteArrayPoolSizeBytes = MemorySizeCalculator.Builder.ARRAY_POOL_SIZE_BYTES;
     ActivityManager activityManager =
         (ActivityManager) RuntimeEnvironment.application.getSystemService(Context.ACTIVITY_SERVICE);
     MemorySizeCalculator.ScreenDimensions screenDimensions =
@@ -176,7 +173,7 @@ public class MemorySizeCalculatorTest {
           .setMaxSizeMultiplier(sizeMultiplier)
           .setActivityManager(activityManager)
           .setScreenDimensions(screenDimensions)
-          .setByteArrayPoolSize(byteArrayPoolSizeBytes)
+          .setArrayPoolSize(byteArrayPoolSizeBytes)
           .build();
     }
 

@@ -14,9 +14,10 @@ import com.bumptech.glide.gifdecoder.GifHeader;
 import com.bumptech.glide.gifdecoder.GifHeaderParser;
 import com.bumptech.glide.load.Options;
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool;
-import com.bumptech.glide.load.engine.bitmap_recycle.LruByteArrayPool;
+import com.bumptech.glide.load.engine.bitmap_recycle.LruArrayPool;
 import com.bumptech.glide.tests.GlideShadowLooper;
-
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,13 +28,11 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.RuntimeEnvironment;
 import org.robolectric.annotation.Config;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE, sdk = 18, shadows = GlideShadowLooper.class)
 public class ByteBufferGifDecoderTest {
   private static final byte[] GIF_HEADER = new byte[] { 0x47, 0x49, 0x46 };
+  static final int ARRAY_POOL_SIZE_BYTES = 4 * 1024 * 1024;
 
   private ByteBufferGifDecoder decoder;
   private GifHeader gifHeader;
@@ -58,8 +57,13 @@ public class ByteBufferGifDecoderTest {
         .thenReturn(gifDecoder);
 
     options = new Options();
-    decoder = new ByteBufferGifDecoder(RuntimeEnvironment.application, bitmapPool,
-        new LruByteArrayPool(), parserPool, decoderFactory);
+    decoder =
+        new ByteBufferGifDecoder(
+            RuntimeEnvironment.application,
+            bitmapPool,
+            new LruArrayPool(ARRAY_POOL_SIZE_BYTES),
+            parserPool,
+            decoderFactory);
   }
 
   @Test

@@ -8,7 +8,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -201,9 +200,9 @@ public class LruBitmapPool implements BitmapPool {
     if (Log.isLoggable(TAG, Log.DEBUG)) {
       Log.d(TAG, "trimMemory, level=" + level);
     }
-    if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_MODERATE) {
+    if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
       clearMemory();
-    } else if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_BACKGROUND) {
+    } else if (level >= android.content.ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
       trimToSize(maxSize / 2);
     }
   }
